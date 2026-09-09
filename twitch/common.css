@@ -1,0 +1,13 @@
+:root{
+  --ink:#000;--red:#f00;--bg:#1c1c1c;
+  --slab:"Impact","Haettenschweiler","Arial Narrow Bold",sans-serif;
+  --logo-gold:linear-gradient(180deg,#F5CF31 0%,#fff 21%,#E5BD29 46%,#DA9422 67%,#F7D435 86%,#fff 98%);
+  --gold:linear-gradient(46deg,#dca41f 0%,#e9bd4a 13%,#f1cb5e 25%,#f8e5a2 37%,#fffef7 47%,#fbeec4 56%,#f0c855 70%,#f6d98a 82%,#e3ad28 100%);
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);font:15px/1.5 Arial,Helvetica,sans-serif;color:#000;overflow:hidden}
+.bg{position:fixed;inset:0;background:url(../adwarebg.svg) repeat;background-size:177px auto;opacity:1}
+.panel{background:var(--gold);box-shadow:0 0 0 1px rgba(0,0,0,.4),0 20px 50px rgba(0,0,0,.6)}
+.box{background:#fff;border:3px dashed var(--red)}
+.slab{font:normal 1em/1 var(--slab);letter-spacing:.02em;color:var(--red);text-transform:uppercase;text-shadow:.07em .07em 0 #000}
+.url{font:bold 1em/1 Arial,sans-serif;color:#000}

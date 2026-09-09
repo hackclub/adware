@@ -16,3 +16,6 @@ stickers/
 tier-small.png
 tier-medium.png
 tier-large.png
+
+# Twitch channel art and the HTML it was rendered from. Not part of the site.
+twitch/

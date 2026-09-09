@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AdWare: buy sticker space on my laptop</title>
+<title>AdWare</title>
 <meta name="description" content="Ship a project, log your coding hours, spend them on sticker space. Printed, cut and stuck to my laptop live on stream.">
 
 <!-- Favicon. The SVG is the real asset; the PNGs exist because Safari ignores
@@ -28,7 +28,7 @@ const CONFIG = {
                                          // serving the page, which is correct on localhost, on
                                          // Vercel previews and on the live domain. Set it only to
                                          // pin one domain, no https://, e.g. adware.vercel.app
-  FILLOUT_URL    : "TODO_FILLOUT_URL",
+  FILLOUT_URL    : "https://forms.hackclub.com/adware-submit",
   // Gate on the submit button. false shows a dead "not open yet" button even
   // once FILLOUT_URL is filled, so the form can be built and pasted in early
   // and the page still cannot take submissions before you flip this.
@@ -211,9 +211,13 @@ h2.slab{font:normal 30px/1 var(--slab);letter-spacing:.02em;color:var(--red);
   background:var(--logo-gold);-webkit-background-clip:text;background-clip:text;
   color:transparent;-webkit-text-fill-color:transparent}
 .btn:hover{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.55),0 4px 8px rgba(0,0,0,.3)}
+/* The shut label, "Submissions not open yet", is long, and Impact at 32px plus
+   34px of side padding measures 274px. On a 320px phone the box leaves 212px,
+   so the button pushed the page into horizontal scroll. Cap it, and step the
+   type down on the narrowest screens. */
+.btn{max-width:100%}
 .btn.off{background:#8d8d8d;box-shadow:0 5px 0 rgba(0,0,0,.4)}
 .btn.off b{background:none;color:#f2f2f2;-webkit-text-fill-color:#f2f2f2}
-.cta .sub{font-size:13px;color:#333;margin:11px 0 0}
 
 /* ---------- twitch ---------- */
 /* Not wrapped in .box. Same outer width as the boxes above, but the video is
@@ -269,6 +273,13 @@ footer a{color:#c9a233}
   .hero .me-frame{position:static;flex:none}
   .hero .me-frame img{position:static;width:100%;height:auto}
 }
+
+/* 400, not 700: the button only stops fitting on the very narrowest phones, and
+   shrinking it on every phone would be a change with no bug behind it. */
+@media (max-width:400px){
+  .btn b{font-size:24px}
+  .btn span{padding:12px 20px}
+}
 </style>
 </head>
 <body>
@@ -312,13 +323,10 @@ footer a{color:#c9a233}
              used to be a separate chip; it now rides inside this sentence, which
              is the only place it appears above the fold. Do not drop it. -->
         <p class="kicker">The sticker you design will be sent to you, and will be put on my
-          (<a class="hostlink" id="hostlink" target="_blank" rel="noopener noreferrer"
-             title="Message me on the Hack Club Slack"><span data-cfg="ORGANISER_NAME"></span></a>)
           laptop LIVE on stream</p>
         <ul class="balls">
           <li>I will be streaming until <b data-cfg="ENDS"></b></li>
-          <li>During this stream, every hour you code gets you bits which you can redeem for
-            stickers</li>
+          <li>During this stream, the hours you code can be redeemed for stickers</li>
           <li>When you redeem a sticker during the live stream I will put the sticker on my
             laptop</li>
         </ul>
@@ -328,7 +336,9 @@ footer a{color:#c9a233}
           <img src="armand-web.webp" width="520" height="471"
                alt="Armand holding up the sticker-covered laptop lid.">
         </div>
-        <figcaption>me, (<span data-cfg="ORGANISER_NAME"></span>), and my laptop
+        <figcaption>me, (<a class="hostlink" data-host target="_blank"
+          rel="noopener noreferrer" title="Message me on Slack"><span
+          data-cfg="ORGANISER_NAME"></span></a>), and my laptop
           in it&rsquo;s current form</figcaption>
       </figure>
     </div>
@@ -350,11 +360,9 @@ footer a{color:#c9a233}
     <section class="rate">
       <h2 class="slab">Prizes</h2>
       <div class="box lede">
-        <p>The prize is a sticker you designed, printed and cut during the stream and stuck to
-          my laptop lid on camera when your order comes up.</p>
-        <p>You get it twice. It goes on the laptop, and I post you a copy of the same sticker in
-          the week after the stream. Bigger sizes cost more hours. The three below are shown at
-          actual size on a 10 cm grid.</p>
+        <p>Ship a project, and upload your sticker design and I will put it on my laptop
+          during the stream.</p>
+        <p>I will also send a copy of your sticker to you after the stream.</p>
       </div>
       <div class="tiers">
         <figure class="tier">
@@ -375,15 +383,6 @@ footer a{color:#c9a233}
       </div>
     </section>
 
-    <!-- ---------- what can I submit ---------- -->
-    <div class="box plain">
-      <h2 class="slab">What can I submit</h2>
-      <p>Any coding project. A game, a tool, a website, a bot, whatever you want to
-        build.</p>
-      <p>Two things it needs. The code has to be public, on GitHub or an equivalent, and the
-        time you spent building it has to be logged in Hackatime so I can review it.</p>
-    </div>
-
     <!-- ---------- the boring, legible paragraph ---------- -->
     <div class="box plain">
       <h2 class="slab">How it works</h2>
@@ -393,40 +392,29 @@ footer a{color:#c9a233}
         <li>Submit and select your sticker size</li>
         <li>Watch it on live</li>
       </ol>
-      <p>Build and ship a project. Log the hours you spent coding it in Hackatime, then submit
-        the project through the form below. I review the hours by hand and they land in your
-        balance. You spend that balance on one of the three sticker sizes above and send me
-        the artwork.</p>
-      <p>Every submission is approved before it prints. I can reject artwork and refund your
-        hours. Nothing hateful, sexual, or targeting a person goes on my property or on a
-        stream that minors watch.</p>
-      <p>There is no cap on numbers. Everyone who submits gets a sticker. The limit is time:
-        submissions close when the stream ends, <b data-cfg="ENDS"></b>.</p>
-      <dl>
-        <dt>Stream runs</dt><dd>until <span data-cfg="ENDS"></span></dd>
-        <dt>Submissions close</dt><dd>at the same time, when the stream ends</dd>
-      </dl>
-      <p class="disclaimer">Reviewing is not instant. I check every submission and every hour by
-        hand, so there is a wait between sending it and the hours landing in your balance, and
-        that wait gets longer when the queue is busy. Fulfilment is not instant either. Stickers
-        go on the laptop as the queue reaches them, and posting happens after the stream, not on
-        the day.</p>
+      <p>Anyone 18 or younger who submits a coding project during the stream can participate.
+        A game, a tool, website, whatever you want to build.</p>
+      <p>Build and ship a project. Log at least 2 hours on your project in Hackatime, then
+        submit below before the deadline.</p>
+      <p>Every submission is approved before I print it, anything I deem hateful, sexual, or
+        generally vulgar will be rejected.</p>
+      <p>Submissions close when the stream ends</p>
+      <p class="disclaimer">I check every submission and every hour by hand, so there is a wait
+        between submitting and me printing your sticker. Stickers go on the laptop as I get to
+        them, and I will post your stickers to you after the stream.</p>
     </div>
 
     <!-- ---------- submit ---------- -->
     <div class="box cta">
-      <a class="btn" id="submit" href="#"><span><b>Claim your space</b></span></a>
-      <p class="sub" id="sub-open">Opens the submission form. You will need your project link
-        and your Hackatime hours.</p>
-      <p class="sub" id="sub-shut" hidden>Submissions open two hours into the stream. You will
-        need your project link and your Hackatime hours.</p>
+      <a class="btn" id="submit" href="#"><span><b>Submit Your Sticker</b></span></a>
     </div>
 
   </main>
 </div>
 
 <footer>
-  <p>AdWare is a Hack Club YSWS run by <span data-cfg="ORGANISER_NAME"></span>.</p>
+  <p>AdWare is a Hack Club YSWS run by <a data-host target="_blank" rel="noopener noreferrer"
+    title="Message me on Slack"><span data-cfg="ORGANISER_NAME"></span></a>.</p>
   <p>
     <a href="https://hackclub.com/privacy-and-terms">Privacy Policy and Terms</a> &nbsp;·&nbsp;
     <a href="https://forms.hackclub.com/bounty">Something went wrong with fulfillment?</a>
@@ -494,17 +482,21 @@ footer a{color:#c9a233}
     if (stacked.addEventListener) stacked.addEventListener("change", fit);
   })();
 
-  // 3. Organiser name links to their Slack profile. There is no href in the
-  //    markup, so an unset URL leaves the name as plain readable text instead of
-  //    a dead link. The name itself is filled above and is required above the
-  //    fold, so it must render whether or not the link resolves.
-  var hostLink = document.getElementById("hostlink");
-  if (isTodo(CONFIG.ORGANISER_SLACK)) {
-    hostLink.classList.remove("hostlink");
-    hostLink.removeAttribute("title");
-    if (missing.indexOf("ORGANISER_SLACK") === -1) missing.push("ORGANISER_SLACK");
-  } else {
-    hostLink.href = CONFIG.ORGANISER_SLACK;
+  // 3. Organiser name links to their Slack profile, in the photo caption and in
+  //    the footer. There is no href in the markup, so an unset URL leaves the
+  //    name as plain readable text instead of a dead link. The name is the
+  //    handbook's above-the-fold requirement and must render either way.
+  var hostLinks = document.querySelectorAll("[data-host]");
+  for (var h = 0; h < hostLinks.length; h++) {
+    if (isTodo(CONFIG.ORGANISER_SLACK)) {
+      hostLinks[h].classList.remove("hostlink");
+      hostLinks[h].removeAttribute("title");
+    } else {
+      hostLinks[h].href = CONFIG.ORGANISER_SLACK;
+    }
+  }
+  if (isTodo(CONFIG.ORGANISER_SLACK) && missing.indexOf("ORGANISER_SLACK") === -1) {
+    missing.push("ORGANISER_SLACK");
   }
 
   // 4. Submit button. SUBMISSIONS_OPEN is checked first and wins, so the form
@@ -518,8 +510,6 @@ footer a{color:#c9a233}
     btn.setAttribute("aria-disabled", "true");
     btn.querySelector("b").textContent = "Submissions not open yet";
     btn.className = "btn off";
-    document.getElementById("sub-open").hidden = true;
-    document.getElementById("sub-shut").hidden = false;
   } else if (isTodo(CONFIG.FILLOUT_URL)) {
     btn.href = "#";
     btn.querySelector("b").textContent = "Set FILLOUT_URL";
