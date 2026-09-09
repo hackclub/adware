@@ -6,35 +6,47 @@
 <title>AdWare: buy sticker space on my laptop</title>
 <meta name="description" content="Ship a project, log your coding hours, spend them on sticker space. Printed, cut and stuck to my laptop live on stream.">
 
+<!-- Favicon. The SVG is the real asset; the PNGs exist because Safari ignores
+     SVG favicons, so without them Safari and iOS show a blank page icon. Both
+     PNGs were rendered from favicon.svg by Chrome, since rsvg drops its
+     gradients and Figma filters and returns a black blob. -->
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+
 <!-- =================================================================== -->
 <!--  CONFIG. The only values you need to edit before this goes live.   -->
 <!--  Anything still reading TODO_ renders as a loud yellow chip on the  -->
-<!--  page and trips a warning bar, so it cannot ship by accident.       -->
+<!--  page, and is logged to the browser console on load.                -->
 <!-- =================================================================== -->
 <script>
 const CONFIG = {
-  ORGANISER_NAME : "TODO_ORGANISER_NAME",
-  TWITCH_CHANNEL : "TODO_TWITCH_CHANNEL",
-  TWITCH_PARENT  : "TODO_DOMAIN",        // deploy domain only, no https://, e.g. adware.vercel.app
+  ORGANISER_NAME : "Armand",
+  ORGANISER_SLACK: "https://hackclub.enterprise.slack.com/team/U07ABEP916X",
+  TWITCH_CHANNEL : "adwarehackclub",
+  TWITCH_PARENT  : "TODO_DOMAIN",        // Leave as TODO. It then follows whatever hostname is
+                                         // serving the page, which is correct on localhost, on
+                                         // Vercel previews and on the live domain. Set it only to
+                                         // pin one domain, no https://, e.g. adware.vercel.app
   FILLOUT_URL    : "TODO_FILLOUT_URL",
+  // Gate on the submit button. false shows a dead "not open yet" button even
+  // once FILLOUT_URL is filled, so the form can be built and pasted in early
+  // and the page still cannot take submissions before you flip this.
+  SUBMISSIONS_OPEN: false,
 
-  STARTS         : "TODO_START",         // e.g. "Tue 9 Sep, 17:00 EDT"
-  ENDS           : "TODO_END",           // e.g. "Wed 10 Sep, 17:00 EDT"
-  INTAKE_CLOSES  : "TODO_INTAKE_CLOSE",  // hard stop on new orders
-  FINAL_PHOTO    : "TODO_FINAL_PHOTO",   // exact published time, top layer wins
-  SLEEP_WINDOW   : "TODO_SLEEP_WINDOW",  // e.g. "04:00–06:00 EDT"
-  REDEMPTION_CAP : "TODO_CAP",           // total stickers. Must be a number, in writing.
-
-  BG_WORD        : "ADWARE"               // tiled background word
+  ENDS           : "Wed 10 Sep, 17:00 EDT"
 };
 </script>
 
 <style>
 :root{
   --ink:#000;
-  --red:#e01b1b;
-  --bg:#141414;
-  --bg-tile:#1c1c1c;
+  --red:#f00;         /* primary. Do not darken. live-now.svg is hardcoded to match. */
+  --bg:#1c1c1c;
+
+  /* One tile of adwarebg.svg. Must match that file's width, 177, or the scroll
+     wraps mid-tile and the seam shows. Scales the whole backdrop. */
+  --tile:177px;
   --slab:"Impact","Haettenschweiler","Arial Narrow Bold",sans-serif;
   --black:"Arial Black","Arial Bold",Arial,sans-serif;
   --logo-gold:linear-gradient(180deg,#F5CF31 0%,#fff 21%,#E5BD29 46%,
@@ -51,15 +63,19 @@ img{max-width:100%;height:auto;display:block}
 a{color:var(--red)}
 
 /* ---------- scrolling tiled wordmark background ---------- */
-/* One repeating SVG tile on a single composited layer. The earlier version used
-   16 full-width animated text rows, which blew out compositing and painted blank. */
+/* One repeating tile on a single composited layer. An early version used 16
+   full-width animated text rows, which blew out compositing and painted blank.
+   The word is outlines in adwarebg.svg, so there is no font to load and no JS
+   to run: this paints with scripting off. Scrolls right. */
 .bg{position:fixed;inset:0;z-index:0;overflow:hidden;background:var(--bg);pointer-events:none}
-.bg-inner{position:absolute;top:0;bottom:0;left:0;
-  width:calc(100% + var(--tile,276px));
-  background-repeat:repeat;
-  animation:drift 42s linear infinite}
+.bg-inner{position:absolute;top:0;bottom:0;left:calc(var(--tile) * -1);
+  width:calc(100% + var(--tile));
+  background:url(adwarebg.svg) repeat;
+  background-size:var(--tile) auto;
+  animation:drift 27s linear infinite}
+/* Moves exactly one tile, so the wrap point is invisible. */
 @keyframes drift{from{transform:translateX(0)}
-                 to{transform:translateX(calc(var(--tile,276px) * -1))}}
+                 to{transform:translateX(var(--tile))}}
 @media (prefers-reduced-motion:reduce){.bg-inner{animation:none}}
 
 /* ---------- shell ---------- */
@@ -78,12 +94,46 @@ a{color:var(--red)}
 .box{background:#fff;border:3px dashed var(--red);padding:16px 18px;margin-bottom:16px}
 .box:last-child{margin-bottom:0}
 
-.hero{display:grid;grid-template-columns:1fr 232px;gap:18px;align-items:start}
+/* The text column sets the row height and the figure fits inside it, so this
+   width is not a free choice: it has to equal what the cutout's aspect ratio
+   produces at that height, or contain letterboxes and leaves a gap. That makes
+   the width depend on a height a sibling determined, which CSS cannot express,
+   so the script measures it and sets --me-col. The 143px here is only the no-JS
+   fallback: exact at >=900px, letterboxing a little below that. */
+.hero{display:grid;grid-template-columns:1fr var(--me-col,143px);gap:18px;
+  align-items:stretch}
 .hero h1{font:bold 17px/1.35 Arial,sans-serif;margin:0 0 6px}
 .hero .kicker{font:bold italic 15px/1.4 Arial,sans-serif;color:var(--red);margin:0 0 12px}
-.hero figure{margin:0}
-.hero figcaption{font-size:11px;color:#555;margin-top:5px;line-height:1.35}
-.hero img{border:1px solid #999}
+/* The cutout fills the row instead of setting it. The image is absolutely
+   positioned so it contributes no height, which leaves the row height coming
+   from the text column alone; the figure then stretches to match, so there is
+   never blank box under the bullets.
+   contain, not cover: the whole figure has to stay visible and keep its aspect
+   ratio, so it scales to the container's height and takes whatever width that
+   implies. The column width below is set to match that width, otherwise contain
+   letterboxes and leaves a gap beside it.
+   No border either: this is a transparent cutout, so one would draw a rectangle
+   around empty space. */
+/* Negative top and right margins cancel the .box padding on those two sides
+   only, so the cutout sits flush into the top-right corner instead of floating
+   16px below it. Without this the first thing at the top of the box is the
+   annotation text with a gap above it, which reads as a mistake. Not the full
+   16/18, so a few px of air is left and the annotations do not sit on the dashed
+   border. Side effect, and a welcome one: reclaiming padding makes the figure
+   bigger. */
+.hero .me{margin:-10px -12px 0 0;display:flex;flex-direction:column;min-height:0}
+.hero .me-frame{position:relative;flex:1;min-height:0}
+/* Anchored top, not bottom. Between the 640px breakpoint and the 900px max-width
+   the text wraps more, so the frame runs taller than the picture needs. Anchored
+   bottom that slack became ~42px of gap above the head, which is the exact thing
+   the corner bleed above exists to remove. Top anchoring puts it underneath. */
+.hero .me-frame img{position:absolute;inset:0;width:100%;height:100%;
+  object-fit:contain;object-position:center top}
+/* Lowercase is the organiser's wording. Doing it with text-transform rather than
+   typing it in means the name still comes from CONFIG and is lowercased on the
+   way out, instead of being hardcoded here and drifting from the footer. */
+.hero figcaption{font-size:11px;color:#555;margin-top:5px;line-height:1.35;
+  text-transform:lowercase}
 
 /* gold ball bullets */
 ul.balls{list-style:none;margin:0;padding:0}
@@ -93,9 +143,14 @@ ul.balls li::before{content:"";position:absolute;left:0;top:2px;width:16px;heigh
   border-radius:50%;background:radial-gradient(circle at 33% 28%,#fff9d0,#fbd53c 42%,#d19a09 100%);
   box-shadow:0 1px 2px rgba(0,0,0,.35)}
 
-.host{font:bold 13px/1.4 Arial,sans-serif;text-transform:uppercase;letter-spacing:.06em;
-  color:#000;background:#ffe95c;border:2px solid #000;display:inline-block;
-  padding:4px 9px;margin:0 0 12px}
+/* Organiser name inside the kicker. It inherits the kicker's red, so colour
+   cannot signal that it is a link and the underline has to. Hover flips to the
+   same yellow the config chips use, because a red-on-red hover would be
+   invisible. focus-visible gets the same treatment for keyboard users. */
+.hostlink{color:inherit;text-decoration:underline;text-decoration-thickness:2px;
+  text-underline-offset:2px;cursor:pointer}
+.hostlink:hover,.hostlink:focus-visible{background:#ff0;color:#000;outline:none;
+  text-decoration-thickness:3px}
 
 /* ---------- section headings ---------- */
 h2.slab{font:normal 30px/1 var(--slab);letter-spacing:.02em;color:var(--red);
@@ -103,13 +158,37 @@ h2.slab{font:normal 30px/1 var(--slab);letter-spacing:.02em;color:var(--red);
   text-shadow:2px 2px 0 #000}
 
 /* ---------- rate card ---------- */
-.tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:0 0 14px}
-.tier{border:3px dashed var(--red);background:#fff;padding:12px;text-align:center}
-.tier .name{font:normal 26px/1 var(--slab);letter-spacing:.02em;text-transform:uppercase;margin-bottom:6px}
-.tier .size{font-size:13px;color:#333}
-.tier .price{font:normal 34px/1 var(--slab);color:var(--red);margin-top:8px;text-shadow:1.5px 1.5px 0 #000}
+/* Not wrapped in .box, the same call as the Twitch section below. Each tier
+   image is a full bleed blueprint that already carries its own frame and its
+   own dashed cut line, so a dashed border plus white padding around it frames
+   the artwork twice and shrinks it for nothing. Sitting straight on the gold
+   also gives them the same flush treatment as the video. */
+.rate{margin:0 0 16px}
+.tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:0 0 12px}
+.tier{margin:0}
+/* A hairline only, to seat the blue square against the gold. */
+.tier img{width:100%;height:auto;border:1px solid rgba(0,0,0,.5)}
+.tier .price{font:normal 34px/1 var(--slab);color:var(--red);margin-top:9px;
+  text-align:center;text-shadow:1.5px 1.5px 0 #000}
 .tier .price small{font:bold 12px/1 Arial,sans-serif;color:#000;text-shadow:none;display:block;margin-top:3px;letter-spacing:.04em}
-.note{font-size:13px;color:#333;margin:0}
+/* A plain .box like every other text block. Body copy sitting bare on the gold
+   read as unstyled, because the gradient runs from #dca41f to near white
+   underneath it and no single ink colour holds up across that. The white box is
+   what the rest of the page already uses to solve exactly that. */
+.rate .lede p{margin:0 0 9px;font-size:14.5px;line-height:1.5}
+.rate .lede p:last-child{margin-bottom:0}
+
+/* ---------- how it works, numbered steps ---------- */
+/* Same gold ball as the hero bullets, sized up to hold a numeral. Scannable
+   summary above the prose, not instead of it: the prose carries the detail
+   about review, refunds and the cap, which is the part people actually need. */
+.steps{list-style:none;margin:0 0 15px;padding:0;counter-reset:step;
+  display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.steps li{counter-increment:step;text-align:center;font-size:13.5px;line-height:1.45}
+.steps li::before{content:counter(step);display:flex;align-items:center;justify-content:center;
+  width:40px;height:40px;margin:0 auto 9px;border-radius:50%;
+  background:radial-gradient(circle at 33% 28%,#fff9d0,#fbd53c 42%,#d19a09 100%);
+  box-shadow:0 1px 2px rgba(0,0,0,.35);font:normal 24px/1 var(--slab);color:#000}
 
 /* ---------- the plain paragraph ---------- */
 .plain p{margin:0 0 10px;font-size:14.5px}
@@ -117,6 +196,10 @@ h2.slab{font:normal 30px/1 var(--slab);letter-spacing:.02em;color:var(--red);
 .plain dl{margin:12px 0 0;display:grid;grid-template-columns:auto 1fr;gap:5px 14px;font-size:14px}
 .plain dt{font-weight:bold;white-space:nowrap}
 .plain dd{margin:0}
+/* Set apart from the body copy: this is the expectation-setting about waiting,
+   and it should read as a caveat rather than as part of the pitch. */
+.plain .disclaimer{margin:13px 0 0;padding-top:11px;border-top:1px solid #ddd;
+  font-size:13px;color:#555}
 
 /* ---------- submit ---------- */
 .cta{text-align:center;padding:18px 16px}
@@ -133,6 +216,20 @@ h2.slab{font:normal 30px/1 var(--slab);letter-spacing:.02em;color:var(--red);
 .cta .sub{font-size:13px;color:#333;margin:11px 0 0}
 
 /* ---------- twitch ---------- */
+/* Not wrapped in .box. Same outer width as the boxes above, but the video is
+   flush to the panel's content edge instead of sitting behind a dashed border
+   and 18px of padding, so the picture itself is ~42px wider. */
+.live{margin-bottom:16px}
+.live-head{display:flex;align-items:center;gap:9px;margin:0 0 11px}
+/* min-width:0 is load-bearing. An image's automatic minimum size is its
+   intrinsic width, so without this the wordmark refuses to shrink and spills
+   past the panel edge, and max-width:100% does not save it because that 100% is
+   the whole flex line, not the space left over after the dot and the gap. */
+.live-head img{width:327px;max-width:100%;min-width:0;height:auto}
+/* The on-air dot. Explicit px, not stretch+aspect-ratio: flex:none resolves the
+   basis from content, so the aspect-ratio had no height to work from and the dot
+   collapsed to zero width. */
+.dot{flex:none;width:22px;height:22px;border-radius:50%;background:var(--red)}
 .tv{position:relative;padding-top:56.25%;background:#000;border:1px solid #000}
 .tv iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .tv .off{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
@@ -144,23 +241,39 @@ footer{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:22px 16
 footer a{color:#c9a233}
 
 /* ---------- unfilled config ---------- */
-.todo{background:#ff0;color:#c00;border:1px dashed #c00;padding:0 4px;font-weight:bold;
+.todo{background:#ff0;color:var(--red);border:1px dashed var(--red);padding:0 4px;font-weight:bold;
   font-family:Arial,sans-serif;font-style:normal}
-#warn{position:relative;z-index:2;background:#c00;color:#fff;font-size:13px;
-  padding:9px 16px;text-align:center;font-weight:bold}
-#warn code{background:rgba(0,0,0,.3);padding:1px 5px}
-
-@media (max-width:640px){
+/* 700, not 640. Below about 680 the two-column hero has no stable solution: the
+   text column gets narrow enough that widening the figure adds text lines faster
+   than it gains height, so the fit loop diverges and only the clamp stops it,
+   leaving ~85px of letterbox. Stacking before that band avoids the problem
+   instead of papering over it. Keep this in step with the matchMedia in the
+   script. */
+@media (max-width:700px){
   .hero{grid-template-columns:1fr}
   .tiers{grid-template-columns:1fr}
+  .steps{grid-template-columns:repeat(2,1fr)}
   .masthead img{width:165px}
+  /* Smaller than the space it could fill. Shrink-to-fit alone left the heading
+     running the full panel width with no margin, which read as broken. */
+  .live-head{gap:7px}
+  .live-head img{width:230px}
+  .dot{width:16px;height:16px}
+  /* One column here, so there is no text column to borrow a height from and the
+     frame would collapse to nothing. Give it an explicit height instead. */
+  /* One column here, so there is no text column to take a height from. Drop the
+     absolute positioning and let it be an ordinary responsive image: full width,
+     natural height, so it fits exactly with no height to guess at. The corner
+     bleed is dropped too, since stacked there is nothing to sit beside. */
+  .hero .me{margin:0}
+  .hero .me-frame{position:static;flex:none}
+  .hero .me-frame img{position:static;width:100%;height:auto}
 }
 </style>
 </head>
 <body>
 
-<div class="bg" id="bg" aria-hidden="true"></div>
-<div id="warn" hidden></div>
+<div class="bg" aria-hidden="true"><div class="bg-inner"></div></div>
 
 <div class="wrap">
 
@@ -184,7 +297,7 @@ footer a{color:#c9a233}
         </text>
         <text font-family="Impact,Haettenschweiler,Arial Narrow Bold,sans-serif"
               font-size="104" letter-spacing="1.5"
-              fill="#ef1b1b" stroke="#fff" stroke-width="5" paint-order="stroke"
+              fill="#f00" stroke="#fff" stroke-width="5" paint-order="stroke"
               stroke-linejoin="round">
           <textPath href="#arc" startOffset="50%" text-anchor="middle">CONGRATULATIONS!</textPath>
         </text>
@@ -194,84 +307,119 @@ footer a{color:#c9a233}
     <!-- ---------- hero box ---------- -->
     <div class="box hero">
       <div>
-        <p class="host">Your host: <span data-cfg="ORGANISER_NAME"></span></p>
         <h1>You&rsquo;ve been chosen to design a sticker!</h1>
+        <!-- The organiser name is the handbook's above-the-fold requirement. It
+             used to be a separate chip; it now rides inside this sentence, which
+             is the only place it appears above the fold. Do not drop it. -->
         <p class="kicker">The sticker you design will be sent to you, and will be put on my
+          (<a class="hostlink" id="hostlink" target="_blank" rel="noopener noreferrer"
+             title="Message me on the Hack Club Slack"><span data-cfg="ORGANISER_NAME"></span></a>)
           laptop LIVE on stream</p>
         <ul class="balls">
-          <li>I will be streaming from <b data-cfg="STARTS"></b> until <b data-cfg="ENDS"></b></li>
+          <li>I will be streaming until <b data-cfg="ENDS"></b></li>
           <li>During this stream, every hour you code gets you bits which you can redeem for
             stickers</li>
           <li>When you redeem a sticker during the live stream I will put the sticker on my
             laptop</li>
         </ul>
       </div>
-      <figure>
-        <img src="laptop-web.jpg" width="900" height="639"
-             alt="A laptop lid completely covered in overlapping stickers.">
-        <figcaption>The laptop. It already has previous form.</figcaption>
+      <figure class="me">
+        <div class="me-frame">
+          <img src="armand-web.webp" width="520" height="471"
+               alt="Armand holding up the sticker-covered laptop lid.">
+        </div>
+        <figcaption>me, (<span data-cfg="ORGANISER_NAME"></span>), and my laptop
+          in it&rsquo;s current form</figcaption>
       </figure>
     </div>
 
-    <!-- ---------- rate card ---------- -->
-    <div class="box">
-      <h2 class="slab">The rate card</h2>
-      <div class="tiers">
-        <div class="tier">
-          <div class="name">Button</div>
-          <div class="size">3 &times; 3 cm<br>9 cm&sup2;</div>
-          <div class="price">2<small>HOURS</small></div>
-        </div>
-        <div class="tier">
-          <div class="name">Banner</div>
-          <div class="size">5 &times; 5 cm<br>25 cm&sup2;</div>
-          <div class="price">3<small>HOURS</small></div>
-        </div>
-        <div class="tier">
-          <div class="name">Billboard</div>
-          <div class="size">7 &times; 7 cm<br>49 cm&sup2;</div>
-          <div class="price">5<small>HOURS</small></div>
-        </div>
+    <!-- ---------- twitch ---------- -->
+    <!-- Deliberately not a .box. The player sits straight on the gold panel with
+         no white inset and no dashed frame, so the picture runs the full width of
+         the panel. The heading is an outlined SVG, so no font is needed. -->
+    <section class="live">
+      <h2 class="live-head">
+        <span class="dot" aria-hidden="true"></span>
+        <img src="live-now.svg" width="327" height="35" alt="Live literally right now">
+      </h2>
+      <div class="tv" id="tv"></div>
+    </section>
+
+    <!-- ---------- prizes ---------- -->
+    <!-- Deliberately not a .box. See the rate card CSS for why. -->
+    <section class="rate">
+      <h2 class="slab">Prizes</h2>
+      <div class="box lede">
+        <p>The prize is a sticker you designed, printed and cut during the stream and stuck to
+          my laptop lid on camera when your order comes up.</p>
+        <p>You get it twice. It goes on the laptop, and I post you a copy of the same sticker in
+          the week after the stream. Bigger sizes cost more hours. The three below are shown at
+          actual size on a 10 cm grid.</p>
       </div>
-      <p class="note">Price is size only. You do not pick a spot, I do. Stickers stack, and
-        whatever is on top at <b data-cfg="FINAL_PHOTO"></b> is what the final photo shows,
-        permanently.</p>
+      <div class="tiers">
+        <figure class="tier">
+          <img src="tier-small.webp" width="1088" height="1088"
+               alt="Small tier: a 3 by 3 cm sticker shown to scale on a 10 cm grid.">
+          <figcaption class="price">2<small>HOURS</small></figcaption>
+        </figure>
+        <figure class="tier">
+          <img src="tier-medium.webp" width="1088" height="1088"
+               alt="Medium tier: a 5 by 5 cm sticker shown to scale on a 10 cm grid.">
+          <figcaption class="price">3<small>HOURS</small></figcaption>
+        </figure>
+        <figure class="tier">
+          <img src="tier-large.webp" width="1088" height="1088"
+               alt="Large tier: a 7 by 7 cm sticker shown to scale on a 10 cm grid.">
+          <figcaption class="price">5<small>HOURS</small></figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- ---------- what can I submit ---------- -->
+    <div class="box plain">
+      <h2 class="slab">What can I submit</h2>
+      <p>Any coding project. A game, a tool, a website, a bot, whatever you want to
+        build.</p>
+      <p>Two things it needs. The code has to be public, on GitHub or an equivalent, and the
+        time you spent building it has to be logged in Hackatime so I can review it.</p>
     </div>
 
     <!-- ---------- the boring, legible paragraph ---------- -->
     <div class="box plain">
-      <h2 class="slab">What actually happens</h2>
+      <h2 class="slab">How it works</h2>
+      <ol class="steps">
+        <li>Log hours in Hackatime</li>
+        <li>Ship a project</li>
+        <li>Submit and select your sticker size</li>
+        <li>Watch it on live</li>
+      </ol>
       <p>Build and ship a project. Log the hours you spent coding it in Hackatime, then submit
         the project through the form below. I review the hours by hand and they land in your
         balance. You spend that balance on one of the three sticker sizes above and send me
         the artwork.</p>
-      <p>During the stream, when your order comes up, I print your sticker on an inkjet, cut it
-        on a Cricut, and stick it to my laptop lid on camera. Then I post the sticker to you,
-        batched in the week after the stream. Both things happen: it goes on the laptop, and
-        you get one.</p>
       <p>Every submission is approved before it prints. I can reject artwork and refund your
         hours. Nothing hateful, sexual, or targeting a person goes on my property or on a
         stream that minors watch.</p>
+      <p>There is no cap on numbers. Everyone who submits gets a sticker. The limit is time:
+        submissions close when the stream ends, <b data-cfg="ENDS"></b>.</p>
       <dl>
-        <dt>Stream runs</dt><dd><span data-cfg="STARTS"></span> &rarr; <span data-cfg="ENDS"></span></dd>
-        <dt>I sleep</dt><dd><span data-cfg="SLEEP_WINDOW"></span>. The queue keeps moving when I wake up</dd>
-        <dt>Orders close</dt><dd><span data-cfg="INTAKE_CLOSES"></span>, announced an hour before</dd>
-        <dt>Final photo</dt><dd><span data-cfg="FINAL_PHOTO"></span>, exactly</dd>
-        <dt>Total limit</dt><dd><b><span data-cfg="REDEMPTION_CAP"></span> stickers</b> for the whole event. When they are gone, they are gone.</dd>
+        <dt>Stream runs</dt><dd>until <span data-cfg="ENDS"></span></dd>
+        <dt>Submissions close</dt><dd>at the same time, when the stream ends</dd>
       </dl>
+      <p class="disclaimer">Reviewing is not instant. I check every submission and every hour by
+        hand, so there is a wait between sending it and the hours landing in your balance, and
+        that wait gets longer when the queue is busy. Fulfilment is not instant either. Stickers
+        go on the laptop as the queue reaches them, and posting happens after the stream, not on
+        the day.</p>
     </div>
 
     <!-- ---------- submit ---------- -->
     <div class="box cta">
       <a class="btn" id="submit" href="#"><span><b>Claim your space</b></span></a>
-      <p class="sub">Opens the submission form. You will need your project link and your
-        Hackatime hours.</p>
-    </div>
-
-    <!-- ---------- twitch ---------- -->
-    <div class="box">
-      <h2 class="slab">Live right now</h2>
-      <div class="tv" id="tv"></div>
+      <p class="sub" id="sub-open">Opens the submission form. You will need your project link
+        and your Hackatime hours.</p>
+      <p class="sub" id="sub-shut" hidden>Submissions open two hours into the stream. You will
+        need your project link and your Hackatime hours.</p>
     </div>
 
   </main>
@@ -289,31 +437,7 @@ footer a{color:#c9a233}
 (function () {
   var isTodo = function (v) { return typeof v === "string" && v.indexOf("TODO") === 0; };
 
-  // 1. Tiled scrolling background. One repeating SVG tile, one layer.
-  var word = (isTodo(CONFIG.BG_WORD) || !CONFIG.BG_WORD) ? "ADWARE" : String(CONFIG.BG_WORD);
-  var FS = 56, GAP = 18;
-  var wordW = Math.round(word.length * 44);      // Arial Black ~0.78em per char
-  var tile  = wordW + GAP;
-  var rowH  = 66;
-  function t(x, y) {
-    return "<text x='" + x + "' y='" + y + "' textLength='" + wordW +
-           "' lengthAdjust='spacingAndGlyphs'>" + word + "</text>";
-  }
-  var svg =
-    "<svg xmlns='http://www.w3.org/2000/svg' width='" + tile + "' height='" + (rowH * 2) + "'>" +
-    "<g font-family='Arial Black,Arial,sans-serif' font-weight='900' font-size='" + FS +
-    "' fill='%231c1c1c'>" +
-    t(0, rowH - 14) +                                   // row 1
-    t(-Math.round(tile / 2), rowH * 2 - 14) +           // row 2, brick-offset
-    t(Math.round(tile / 2), rowH * 2 - 14) +
-    "</g></svg>";
-  var inner = document.createElement("div");
-  inner.className = "bg-inner";
-  inner.style.setProperty("--tile", tile + "px");
-  inner.style.backgroundImage = 'url("data:image/svg+xml;utf8,' + svg.replace(/"/g, "'") + '")';
-  document.getElementById("bg").appendChild(inner);
-
-  // 2. Fill config values, flagging anything unfilled
+  // 1. Fill config values, flagging anything unfilled
   var missing = [];
   document.querySelectorAll("[data-cfg]").forEach(function (el) {
     var key = el.getAttribute("data-cfg"), val = CONFIG[key];
@@ -325,44 +449,122 @@ footer a{color:#c9a233}
     }
   });
 
-  // 3. Submit button
+  // 2. Cutout column width. The figure must fill its row vertically without
+  //    being cropped, so its width follows from its own height. CSS cannot say
+  //    that: sizing runs width-first, so a width cannot derive from a height a
+  //    sibling determined. This is Figma's fill/hug and it has no CSS
+  //    equivalent, so it is measured. Without it the figure fits exactly at one
+  //    text height and letterboxes at every other viewport width.
+  //    Aspect comes from the file itself, so re-exporting the cutout at another
+  //    ratio needs no code change.
+  (function () {
+    var hero  = document.querySelector(".hero");
+    var frame = document.querySelector(".me-frame");
+    var img   = frame && frame.querySelector("img");
+    if (!hero || !frame || !img) return;
+    var stacked = window.matchMedia("(max-width:700px)");  // keep in step with the CSS
+
+    function fit() {
+      // Stacked, the image is an ordinary responsive one and needs no help.
+      if (stacked.matches) { hero.style.removeProperty("--me-col"); return; }
+      var aspect = img.naturalWidth / img.naturalHeight;
+      if (!aspect) return;
+      // The negative right margin lets the picture be wider than its track.
+      var bleed = -parseFloat(getComputedStyle(frame.parentNode).marginRight) || 0;
+      // Usually converges: a narrower track widens the text, which shortens it,
+      // which shortens the frame. Below ~680px it does the opposite and runs
+      // away, because widening the figure squeezes the text into more lines,
+      // which asks for a taller figure, which asks for a wider one. Unclamped
+      // that reached 1014px wide and pushed the page into horizontal scroll.
+      // The clamp stops it; the cost is a little vertical letterbox on narrow
+      // desktop windows, which is the lesser of the two faults.
+      var max = hero.clientWidth * 0.4;
+      for (var i = 0; i < 8; i++) {
+        var want = Math.round(Math.min(frame.getBoundingClientRect().height * aspect - bleed, max));
+        if (!(want > 40)) return;
+        if (Math.abs(want - parseFloat(hero.style.getPropertyValue("--me-col") || 0)) < 1) break;
+        hero.style.setProperty("--me-col", want + "px");
+      }
+    }
+
+    if (img.complete && img.naturalWidth) fit();
+    img.addEventListener("load", fit);
+    if (window.ResizeObserver) new ResizeObserver(fit).observe(hero);
+    else window.addEventListener("resize", fit);
+    if (stacked.addEventListener) stacked.addEventListener("change", fit);
+  })();
+
+  // 3. Organiser name links to their Slack profile. There is no href in the
+  //    markup, so an unset URL leaves the name as plain readable text instead of
+  //    a dead link. The name itself is filled above and is required above the
+  //    fold, so it must render whether or not the link resolves.
+  var hostLink = document.getElementById("hostlink");
+  if (isTodo(CONFIG.ORGANISER_SLACK)) {
+    hostLink.classList.remove("hostlink");
+    hostLink.removeAttribute("title");
+    if (missing.indexOf("ORGANISER_SLACK") === -1) missing.push("ORGANISER_SLACK");
+  } else {
+    hostLink.href = CONFIG.ORGANISER_SLACK;
+  }
+
+  // 4. Submit button. SUBMISSIONS_OPEN is checked first and wins, so the form
+  //    URL can be filled in days early without the page accepting anything.
+  //    FILLOUT_URL still counts as missing while shut, because it is still
+  //    needed before going live and the console list is the checklist.
   var btn = document.getElementById("submit");
-  if (isTodo(CONFIG.FILLOUT_URL)) {
+  if (isTodo(CONFIG.FILLOUT_URL) && missing.indexOf("FILLOUT_URL") === -1) missing.push("FILLOUT_URL");
+  if (!CONFIG.SUBMISSIONS_OPEN) {
+    btn.href = "#";
+    btn.setAttribute("aria-disabled", "true");
+    btn.querySelector("b").textContent = "Submissions not open yet";
+    btn.className = "btn off";
+    document.getElementById("sub-open").hidden = true;
+    document.getElementById("sub-shut").hidden = false;
+  } else if (isTodo(CONFIG.FILLOUT_URL)) {
     btn.href = "#";
     btn.querySelector("b").textContent = "Set FILLOUT_URL";
     btn.className = "btn off";
-    if (missing.indexOf("FILLOUT_URL") === -1) missing.push("FILLOUT_URL");
   } else {
     btn.href = CONFIG.FILLOUT_URL;
     btn.rel = "noopener";
   }
 
-  // 4. Twitch embed needs BOTH the channel and the deploy domain as `parent`,
-  //    or Twitch silently refuses to render the player.
+  // 5. Twitch embed needs BOTH the channel and the serving host as `parent`, or
+  //    Twitch silently refuses to render: no console error, nothing visible.
+  //    `parent` is not really a choice. Twitch only accepts the host actually
+  //    serving the page, so an unset TWITCH_PARENT follows location.hostname.
+  //    That is right on localhost, on Vercel preview URLs and on the live
+  //    domain, which removes the commonest way to ship a dead player. A value
+  //    set in CONFIG still wins, so it stays pinnable from the one place.
+  //    file:// has no hostname, so there the embed cannot work and says so.
   var tv = document.getElementById("tv");
-  if (isTodo(CONFIG.TWITCH_CHANNEL) || isTodo(CONFIG.TWITCH_PARENT)) {
+  var tvParent = isTodo(CONFIG.TWITCH_PARENT) ? location.hostname : CONFIG.TWITCH_PARENT;
+  if (isTodo(CONFIG.TWITCH_CHANNEL) || !tvParent) {
     // wrapped in a span: .off is a flex container, so bare text + <b> would each
     // become flex items and the spaces between them would collapse.
     tv.innerHTML = '<div class="off"><span>Twitch embed not configured. Set ' +
-      '<b>TWITCH_CHANNEL</b> and <b>TWITCH_PARENT</b> (the deploy domain, no https://).</span></div>';
+      '<b>TWITCH_CHANNEL</b>' + (tvParent ? '' :
+      ', and <b>TWITCH_PARENT</b> because a file:// page has no hostname to use') +
+      '.</span></div>';
     if (isTodo(CONFIG.TWITCH_CHANNEL) && missing.indexOf("TWITCH_CHANNEL") === -1) missing.push("TWITCH_CHANNEL");
-    if (isTodo(CONFIG.TWITCH_PARENT) && missing.indexOf("TWITCH_PARENT") === -1) missing.push("TWITCH_PARENT");
+    if (!tvParent && missing.indexOf("TWITCH_PARENT") === -1) missing.push("TWITCH_PARENT");
   } else {
     var f = document.createElement("iframe");
     f.src = "https://player.twitch.tv/?channel=" + encodeURIComponent(CONFIG.TWITCH_CHANNEL) +
-            "&parent=" + encodeURIComponent(CONFIG.TWITCH_PARENT) + "&muted=true";
+            "&parent=" + encodeURIComponent(tvParent) + "&muted=true";
     f.allowFullscreen = true;
     f.title = "Live stream";
     tv.appendChild(f);
   }
 
-  // 5. Warning bar, impossible to deploy with holes and not notice
+  // 6. Unset values report to the console, not to the page. The red bar this
+  //    replaced was shown to every visitor, which made it a public banner once
+  //    the site went live rather than a private warning. The signal is still
+  //    worth keeping, so it moved somewhere only you look. An unset FILLOUT_URL
+  //    still shows on the button itself, which is the one that matters.
   if (missing.length) {
-    var w = document.getElementById("warn");
-    w.hidden = false;
-    w.innerHTML = "NOT READY TO SHIP: " + missing.length +
-      " unset value" + (missing.length > 1 ? "s" : "") + " in CONFIG: <code>" +
-      missing.join("</code> <code>") + "</code>";
+    console.warn("AdWare: " + missing.length + " unset CONFIG value" +
+      (missing.length > 1 ? "s" : "") + ": " + missing.join(", "));
   }
 })();
 </script>

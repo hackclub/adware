@@ -2,6 +2,17 @@
 # The repo root is now the deploy root, so this file is what keeps it off the CDN.
 laptop.png
 
-CLAUDE.md
-WEBSITE-HANDOFF.md
+# Internal docs. Listing them one by one meant every new one had to be
+# remembered, and SESSION-HANDOFF.md was already being missed.
+*.md
 .claude/
+
+# Working asset: blueprint scale grid for sticker sizing. Not part of the site.
+sticker-scale*
+stickers/
+
+# 1088px masters for the tier blueprints. The .webp copies are what the page
+# loads, so these would be dead weight on the CDN.
+tier-small.png
+tier-medium.png
+tier-large.png

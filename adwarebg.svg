@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="177" height="152" viewBox="0 0 177 152" fill="none">
+<!-- Background wordmark tile for the scrolling backdrop.
+     ADWARE set in Anton SC, -6% letter spacing, stretched to 150% vertically,
+     exported as outlines. Outlines, not text, so no font is ever fetched and
+     this renders identically everywhere.
+
+     Geometry is driven by the real ink bbox, 174.081 x 73.125, not the exported
+     175 x 74 cell, which carries about a unit of slack on the right and bottom.
+     Measuring from the cell would have made the gaps uneven.
+
+     Gutter is ~2.9 units on both axes, so letters very nearly touch:
+       width  177 = 174.081 ink + 2.919 gap
+       pitch   76 =  73.125 ink + 2.875 gap, and the tile is two rows, so 152
+     Row 2 is offset half a tile (88.5) so the repeat reads as brickwork rather
+     than a grid. Any y start keeps the vertical seam even, since the wrap gap
+     works out to the same 2.875 either way; 1.5 just centres the ink in its band.
+
+     Because it tiles at exactly 177, the scroll animation moves exactly 177 and
+     the seam never shows. The tile custom property in index.html must equal that
+     width. Re-exporting the word means redoing all of this arithmetic.
+
+     Note for editors: a double hyphen is illegal inside an XML comment, so the
+     CSS property cannot be written here in its real form. -->
+<defs>
+<g id="w" fill="#191818">
+<path d="M151.362 73.125V0H173.362V15.9375H162.55V28.0312H172.925V43.5469H162.55V57.0469H174.081V73.125H151.362Z"/>
+<path d="M124.702 73.125V0H141.265C144.077 0 146.223 0.890625 147.702 2.67188C149.202 4.45312 150.223 6.90625 150.765 10.0312C151.307 13.125 151.577 16.6719 151.577 20.6719C151.577 25.7031 151.119 29.6875 150.202 32.625C149.286 35.5625 147.807 37.5781 145.765 38.6719C147.619 39.1094 148.932 40.3594 149.702 42.4219C150.494 44.4844 150.89 47.2031 150.89 50.5781V73.125H139.984V49.5C139.984 47.0938 139.65 45.6094 138.984 45.0469C138.338 44.4531 137.286 44.1562 135.827 44.1562V73.125H124.702ZM135.89 29.8594H138.546C140.067 29.8594 140.827 27.4219 140.827 22.5469C140.827 19.6094 140.661 17.6719 140.327 16.7344C139.994 15.7656 139.369 15.2812 138.452 15.2812H135.89V29.8594Z"/>
+<path d="M95.98 73.125L101.292 0H119.949L125.167 73.125H114.761L114.042 59.8125H107.292L106.667 73.125H95.98ZM110.23 13.125L108.199 46.6406H113.011L110.73 13.125H110.23Z"/>
+<path d="M60.7575 73.125L54.8512 0H65.6012L68.3825 52.0781L71.7262 0H81.9762L85.1637 52.2656L87.8512 0H98.7262L92.7262 73.125H79.5387L76.7887 33.375L74.1637 73.125H60.7575Z"/>
+<path d="M28.7225 73.125V0H43.8788C47.8371 0 50.8058 1.65625 52.785 4.96875C54.785 8.25 55.785 13.0625 55.785 19.4062V48.6562C55.785 56.4688 54.8788 62.5 53.0663 66.75C51.2538 71 48.0663 73.125 43.5038 73.125H28.7225ZM39.785 58.5469H41.6913C43.7121 58.5469 44.7225 57.0781 44.7225 54.1406V20.9531C44.7225 18.2031 44.4725 16.4375 43.9725 15.6562C43.4933 14.8437 42.5038 14.4375 41.0038 14.4375H39.785V58.5469Z"/>
+<path d="M0 73.125L5.3125 0H23.9688L29.1875 73.125H18.7812L18.0625 59.8125H11.3125L10.6875 73.125H0ZM14.25 13.125L12.2188 46.6406H17.0312L14.75 13.125H14.25Z"/>
+</g>
+</defs>
+<!-- xlink:href is duplicated for older Safari, which ignores the plain href on
+     <use> when an SVG is consumed as a CSS background-image. -->
+<use href="#w" xlink:href="#w" x="0" y="1.5"/>
+<use href="#w" xlink:href="#w" x="-88.5" y="77.5"/>
+<use href="#w" xlink:href="#w" x="88.5" y="77.5"/>
+</svg>
