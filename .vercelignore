@@ -1,0 +1,7 @@
+# The 9.2 MB original, kept for re-cropping. It must never be served.
+# The repo root is now the deploy root, so this file is what keeps it off the CDN.
+laptop.png
+
+CLAUDE.md
+WEBSITE-HANDOFF.md
+.claude/

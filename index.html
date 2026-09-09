@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AdWare: buy sticker space on my laptop</title>
+<meta name="description" content="Ship a project, log your coding hours, spend them on sticker space. Printed, cut and stuck to my laptop live on stream.">
+
+<!-- =================================================================== -->
+<!--  CONFIG. The only values you need to edit before this goes live.   -->
+<!--  Anything still reading TODO_ renders as a loud yellow chip on the  -->
+<!--  page and trips a warning bar, so it cannot ship by accident.       -->
+<!-- =================================================================== -->
+<script>
+const CONFIG = {
+  ORGANISER_NAME : "TODO_ORGANISER_NAME",
+  TWITCH_CHANNEL : "TODO_TWITCH_CHANNEL",
+  TWITCH_PARENT  : "TODO_DOMAIN",        // deploy domain only, no https://, e.g. adware.vercel.app
+  FILLOUT_URL    : "TODO_FILLOUT_URL",
+
+  STARTS         : "TODO_START",         // e.g. "Tue 9 Sep, 17:00 EDT"
+  ENDS           : "TODO_END",           // e.g. "Wed 10 Sep, 17:00 EDT"
+  INTAKE_CLOSES  : "TODO_INTAKE_CLOSE",  // hard stop on new orders
+  FINAL_PHOTO    : "TODO_FINAL_PHOTO",   // exact published time, top layer wins
+  SLEEP_WINDOW   : "TODO_SLEEP_WINDOW",  // e.g. "04:00–06:00 EDT"
+  REDEMPTION_CAP : "TODO_CAP",           // total stickers. Must be a number, in writing.
+
+  BG_WORD        : "ADWARE"               // tiled background word
+};
+</script>
+
+<style>
+:root{
+  --ink:#000;
+  --red:#e01b1b;
+  --bg:#141414;
+  --bg-tile:#1c1c1c;
+  --slab:"Impact","Haettenschweiler","Arial Narrow Bold",sans-serif;
+  --black:"Arial Black","Arial Bold",Arial,sans-serif;
+  --logo-gold:linear-gradient(180deg,#F5CF31 0%,#fff 21%,#E5BD29 46%,
+    #DA9422 67%,#F7D435 86%,#fff 98%);
+  --gold:linear-gradient(46deg,
+    #dca41f 0%, #e9bd4a 13%, #f1cb5e 25%, #f8e5a2 37%,
+    #fffef7 47%, #fbeec4 56%, #f0c855 70%, #f6d98a 82%, #e3ad28 100%);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:15px/1.5 Arial,Helvetica,"Helvetica Neue",sans-serif}
+img{max-width:100%;height:auto;display:block}
+a{color:var(--red)}
+
+/* ---------- scrolling tiled wordmark background ---------- */
+/* One repeating SVG tile on a single composited layer. The earlier version used
+   16 full-width animated text rows, which blew out compositing and painted blank. */
+.bg{position:fixed;inset:0;z-index:0;overflow:hidden;background:var(--bg);pointer-events:none}
+.bg-inner{position:absolute;top:0;bottom:0;left:0;
+  width:calc(100% + var(--tile,276px));
+  background-repeat:repeat;
+  animation:drift 42s linear infinite}
+@keyframes drift{from{transform:translateX(0)}
+                 to{transform:translateX(calc(var(--tile,276px) * -1))}}
+@media (prefers-reduced-motion:reduce){.bg-inner{animation:none}}
+
+/* ---------- shell ---------- */
+.wrap{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:0 16px 40px}
+.masthead{text-align:center;padding:20px 0 14px}
+.masthead img{width:200px;height:auto;margin:0 auto}
+
+.panel{background:var(--gold);padding:20px 20px 26px;
+  box-shadow:0 0 0 1px rgba(0,0,0,.4),0 20px 50px rgba(0,0,0,.6)}
+
+/* ---------- congratulations ---------- */
+.congrats{margin:2px 0 16px}
+.congrats svg{width:100%;height:auto;display:block}
+
+/* ---------- dashed white boxes ---------- */
+.box{background:#fff;border:3px dashed var(--red);padding:16px 18px;margin-bottom:16px}
+.box:last-child{margin-bottom:0}
+
+.hero{display:grid;grid-template-columns:1fr 232px;gap:18px;align-items:start}
+.hero h1{font:bold 17px/1.35 Arial,sans-serif;margin:0 0 6px}
+.hero .kicker{font:bold italic 15px/1.4 Arial,sans-serif;color:var(--red);margin:0 0 12px}
+.hero figure{margin:0}
+.hero figcaption{font-size:11px;color:#555;margin-top:5px;line-height:1.35}
+.hero img{border:1px solid #999}
+
+/* gold ball bullets */
+ul.balls{list-style:none;margin:0;padding:0}
+ul.balls li{position:relative;padding:0 0 0 27px;margin:0 0 9px;font-size:14.5px;line-height:1.45}
+ul.balls li:last-child{margin-bottom:0}
+ul.balls li::before{content:"";position:absolute;left:0;top:2px;width:16px;height:16px;
+  border-radius:50%;background:radial-gradient(circle at 33% 28%,#fff9d0,#fbd53c 42%,#d19a09 100%);
+  box-shadow:0 1px 2px rgba(0,0,0,.35)}
+
+.host{font:bold 13px/1.4 Arial,sans-serif;text-transform:uppercase;letter-spacing:.06em;
+  color:#000;background:#ffe95c;border:2px solid #000;display:inline-block;
+  padding:4px 9px;margin:0 0 12px}
+
+/* ---------- section headings ---------- */
+h2.slab{font:normal 30px/1 var(--slab);letter-spacing:.02em;color:var(--red);
+  margin:0 0 12px;text-transform:uppercase;
+  text-shadow:2px 2px 0 #000}
+
+/* ---------- rate card ---------- */
+.tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:0 0 14px}
+.tier{border:3px dashed var(--red);background:#fff;padding:12px;text-align:center}
+.tier .name{font:normal 26px/1 var(--slab);letter-spacing:.02em;text-transform:uppercase;margin-bottom:6px}
+.tier .size{font-size:13px;color:#333}
+.tier .price{font:normal 34px/1 var(--slab);color:var(--red);margin-top:8px;text-shadow:1.5px 1.5px 0 #000}
+.tier .price small{font:bold 12px/1 Arial,sans-serif;color:#000;text-shadow:none;display:block;margin-top:3px;letter-spacing:.04em}
+.note{font-size:13px;color:#333;margin:0}
+
+/* ---------- the plain paragraph ---------- */
+.plain p{margin:0 0 10px;font-size:14.5px}
+.plain p:last-child{margin-bottom:0}
+.plain dl{margin:12px 0 0;display:grid;grid-template-columns:auto 1fr;gap:5px 14px;font-size:14px}
+.plain dt{font-weight:bold;white-space:nowrap}
+.plain dd{margin:0}
+
+/* ---------- submit ---------- */
+.cta{text-align:center;padding:18px 16px}
+.btn{display:inline-block;text-decoration:none;padding:5px;border-radius:15px;
+  border:2px solid #000;background:var(--logo-gold);
+  box-shadow:0 5px 0 rgba(0,0,0,.55),0 8px 14px rgba(0,0,0,.3)}
+.btn span{display:block;background:#040300;border-radius:10px;padding:13px 34px}
+.btn b{font:normal 32px/1 var(--slab);letter-spacing:.04em;text-transform:uppercase;
+  background:var(--logo-gold);-webkit-background-clip:text;background-clip:text;
+  color:transparent;-webkit-text-fill-color:transparent}
+.btn:hover{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.55),0 4px 8px rgba(0,0,0,.3)}
+.btn.off{background:#8d8d8d;box-shadow:0 5px 0 rgba(0,0,0,.4)}
+.btn.off b{background:none;color:#f2f2f2;-webkit-text-fill-color:#f2f2f2}
+.cta .sub{font-size:13px;color:#333;margin:11px 0 0}
+
+/* ---------- twitch ---------- */
+.tv{position:relative;padding-top:56.25%;background:#000;border:1px solid #000}
+.tv iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.tv .off{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  text-align:center;color:#ddd;font-size:14px;padding:20px}
+
+/* ---------- footer ---------- */
+footer{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:22px 16px 40px;
+  color:#8b8b8b;font-size:12.5px;line-height:1.7;text-align:center}
+footer a{color:#c9a233}
+
+/* ---------- unfilled config ---------- */
+.todo{background:#ff0;color:#c00;border:1px dashed #c00;padding:0 4px;font-weight:bold;
+  font-family:Arial,sans-serif;font-style:normal}
+#warn{position:relative;z-index:2;background:#c00;color:#fff;font-size:13px;
+  padding:9px 16px;text-align:center;font-weight:bold}
+#warn code{background:rgba(0,0,0,.3);padding:1px 5px}
+
+@media (max-width:640px){
+  .hero{grid-template-columns:1fr}
+  .tiers{grid-template-columns:1fr}
+  .masthead img{width:165px}
+}
+</style>
+</head>
+<body>
+
+<div class="bg" id="bg" aria-hidden="true"></div>
+<div id="warn" hidden></div>
+
+<div class="wrap">
+
+  <!-- ---------- wordmark ---------- -->
+  <div class="masthead">
+    <img src="logo.svg" width="217" height="103" alt="AdWare">
+  </div>
+
+  <main class="panel">
+
+    <!-- ---------- CONGRATULATIONS! ---------- -->
+    <div class="congrats">
+      <svg viewBox="0 0 1000 132" role="img" aria-label="Congratulations!">
+        <defs>
+          <path id="arc" d="M 28 112 Q 500 56 972 112"/>
+        </defs>
+        <text font-family="Impact,Haettenschweiler,Arial Narrow Bold,sans-serif"
+              font-size="104" letter-spacing="1.5" fill="#000"
+              transform="translate(6,7)">
+          <textPath href="#arc" startOffset="50%" text-anchor="middle">CONGRATULATIONS!</textPath>
+        </text>
+        <text font-family="Impact,Haettenschweiler,Arial Narrow Bold,sans-serif"
+              font-size="104" letter-spacing="1.5"
+              fill="#ef1b1b" stroke="#fff" stroke-width="5" paint-order="stroke"
+              stroke-linejoin="round">
+          <textPath href="#arc" startOffset="50%" text-anchor="middle">CONGRATULATIONS!</textPath>
+        </text>
+      </svg>
+    </div>
+
+    <!-- ---------- hero box ---------- -->
+    <div class="box hero">
+      <div>
+        <p class="host">Your host: <span data-cfg="ORGANISER_NAME"></span></p>
+        <h1>You&rsquo;ve been chosen to design a sticker!</h1>
+        <p class="kicker">The sticker you design will be sent to you, and will be put on my
+          laptop LIVE on stream</p>
+        <ul class="balls">
+          <li>I will be streaming from <b data-cfg="STARTS"></b> until <b data-cfg="ENDS"></b></li>
+          <li>During this stream, every hour you code gets you bits which you can redeem for
+            stickers</li>
+          <li>When you redeem a sticker during the live stream I will put the sticker on my
+            laptop</li>
+        </ul>
+      </div>
+      <figure>
+        <img src="laptop-web.jpg" width="900" height="639"
+             alt="A laptop lid completely covered in overlapping stickers.">
+        <figcaption>The laptop. It already has previous form.</figcaption>
+      </figure>
+    </div>
+
+    <!-- ---------- rate card ---------- -->
+    <div class="box">
+      <h2 class="slab">The rate card</h2>
+      <div class="tiers">
+        <div class="tier">
+          <div class="name">Button</div>
+          <div class="size">3 &times; 3 cm<br>9 cm&sup2;</div>
+          <div class="price">2<small>HOURS</small></div>
+        </div>
+        <div class="tier">
+          <div class="name">Banner</div>
+          <div class="size">5 &times; 5 cm<br>25 cm&sup2;</div>
+          <div class="price">3<small>HOURS</small></div>
+        </div>
+        <div class="tier">
+          <div class="name">Billboard</div>
+          <div class="size">7 &times; 7 cm<br>49 cm&sup2;</div>
+          <div class="price">5<small>HOURS</small></div>
+        </div>
+      </div>
+      <p class="note">Price is size only. You do not pick a spot, I do. Stickers stack, and
+        whatever is on top at <b data-cfg="FINAL_PHOTO"></b> is what the final photo shows,
+        permanently.</p>
+    </div>
+
+    <!-- ---------- the boring, legible paragraph ---------- -->
+    <div class="box plain">
+      <h2 class="slab">What actually happens</h2>
+      <p>Build and ship a project. Log the hours you spent coding it in Hackatime, then submit
+        the project through the form below. I review the hours by hand and they land in your
+        balance. You spend that balance on one of the three sticker sizes above and send me
+        the artwork.</p>
+      <p>During the stream, when your order comes up, I print your sticker on an inkjet, cut it
+        on a Cricut, and stick it to my laptop lid on camera. Then I post the sticker to you,
+        batched in the week after the stream. Both things happen: it goes on the laptop, and
+        you get one.</p>
+      <p>Every submission is approved before it prints. I can reject artwork and refund your
+        hours. Nothing hateful, sexual, or targeting a person goes on my property or on a
+        stream that minors watch.</p>
+      <dl>
+        <dt>Stream runs</dt><dd><span data-cfg="STARTS"></span> &rarr; <span data-cfg="ENDS"></span></dd>
+        <dt>I sleep</dt><dd><span data-cfg="SLEEP_WINDOW"></span>. The queue keeps moving when I wake up</dd>
+        <dt>Orders close</dt><dd><span data-cfg="INTAKE_CLOSES"></span>, announced an hour before</dd>
+        <dt>Final photo</dt><dd><span data-cfg="FINAL_PHOTO"></span>, exactly</dd>
+        <dt>Total limit</dt><dd><b><span data-cfg="REDEMPTION_CAP"></span> stickers</b> for the whole event. When they are gone, they are gone.</dd>
+      </dl>
+    </div>
+
+    <!-- ---------- submit ---------- -->
+    <div class="box cta">
+      <a class="btn" id="submit" href="#"><span><b>Claim your space</b></span></a>
+      <p class="sub">Opens the submission form. You will need your project link and your
+        Hackatime hours.</p>
+    </div>
+
+    <!-- ---------- twitch ---------- -->
+    <div class="box">
+      <h2 class="slab">Live right now</h2>
+      <div class="tv" id="tv"></div>
+    </div>
+
+  </main>
+</div>
+
+<footer>
+  <p>AdWare is a Hack Club YSWS run by <span data-cfg="ORGANISER_NAME"></span>.</p>
+  <p>
+    <a href="https://hackclub.com/privacy-and-terms">Privacy Policy and Terms</a> &nbsp;·&nbsp;
+    <a href="https://forms.hackclub.com/bounty">Something went wrong with fulfillment?</a>
+  </p>
+</footer>
+
+<script>
+(function () {
+  var isTodo = function (v) { return typeof v === "string" && v.indexOf("TODO") === 0; };
+
+  // 1. Tiled scrolling background. One repeating SVG tile, one layer.
+  var word = (isTodo(CONFIG.BG_WORD) || !CONFIG.BG_WORD) ? "ADWARE" : String(CONFIG.BG_WORD);
+  var FS = 56, GAP = 18;
+  var wordW = Math.round(word.length * 44);      // Arial Black ~0.78em per char
+  var tile  = wordW + GAP;
+  var rowH  = 66;
+  function t(x, y) {
+    return "<text x='" + x + "' y='" + y + "' textLength='" + wordW +
+           "' lengthAdjust='spacingAndGlyphs'>" + word + "</text>";
+  }
+  var svg =
+    "<svg xmlns='http://www.w3.org/2000/svg' width='" + tile + "' height='" + (rowH * 2) + "'>" +
+    "<g font-family='Arial Black,Arial,sans-serif' font-weight='900' font-size='" + FS +
+    "' fill='%231c1c1c'>" +
+    t(0, rowH - 14) +                                   // row 1
+    t(-Math.round(tile / 2), rowH * 2 - 14) +           // row 2, brick-offset
+    t(Math.round(tile / 2), rowH * 2 - 14) +
+    "</g></svg>";
+  var inner = document.createElement("div");
+  inner.className = "bg-inner";
+  inner.style.setProperty("--tile", tile + "px");
+  inner.style.backgroundImage = 'url("data:image/svg+xml;utf8,' + svg.replace(/"/g, "'") + '")';
+  document.getElementById("bg").appendChild(inner);
+
+  // 2. Fill config values, flagging anything unfilled
+  var missing = [];
+  document.querySelectorAll("[data-cfg]").forEach(function (el) {
+    var key = el.getAttribute("data-cfg"), val = CONFIG[key];
+    if (isTodo(val)) {
+      el.innerHTML = '<span class="todo">' + key + '</span>';
+      if (missing.indexOf(key) === -1) missing.push(key);
+    } else {
+      el.textContent = val;
+    }
+  });
+
+  // 3. Submit button
+  var btn = document.getElementById("submit");
+  if (isTodo(CONFIG.FILLOUT_URL)) {
+    btn.href = "#";
+    btn.querySelector("b").textContent = "Set FILLOUT_URL";
+    btn.className = "btn off";
+    if (missing.indexOf("FILLOUT_URL") === -1) missing.push("FILLOUT_URL");
+  } else {
+    btn.href = CONFIG.FILLOUT_URL;
+    btn.rel = "noopener";
+  }
+
+  // 4. Twitch embed needs BOTH the channel and the deploy domain as `parent`,
+  //    or Twitch silently refuses to render the player.
+  var tv = document.getElementById("tv");
+  if (isTodo(CONFIG.TWITCH_CHANNEL) || isTodo(CONFIG.TWITCH_PARENT)) {
+    // wrapped in a span: .off is a flex container, so bare text + <b> would each
+    // become flex items and the spaces between them would collapse.
+    tv.innerHTML = '<div class="off"><span>Twitch embed not configured. Set ' +
+      '<b>TWITCH_CHANNEL</b> and <b>TWITCH_PARENT</b> (the deploy domain, no https://).</span></div>';
+    if (isTodo(CONFIG.TWITCH_CHANNEL) && missing.indexOf("TWITCH_CHANNEL") === -1) missing.push("TWITCH_CHANNEL");
+    if (isTodo(CONFIG.TWITCH_PARENT) && missing.indexOf("TWITCH_PARENT") === -1) missing.push("TWITCH_PARENT");
+  } else {
+    var f = document.createElement("iframe");
+    f.src = "https://player.twitch.tv/?channel=" + encodeURIComponent(CONFIG.TWITCH_CHANNEL) +
+            "&parent=" + encodeURIComponent(CONFIG.TWITCH_PARENT) + "&muted=true";
+    f.allowFullscreen = true;
+    f.title = "Live stream";
+    tv.appendChild(f);
+  }
+
+  // 5. Warning bar, impossible to deploy with holes and not notice
+  if (missing.length) {
+    var w = document.getElementById("warn");
+    w.hidden = false;
+    w.innerHTML = "NOT READY TO SHIP: " + missing.length +
+      " unset value" + (missing.length > 1 ? "s" : "") + " in CONFIG: <code>" +
+      missing.join("</code> <code>") + "</code>";
+  }
+})();
+</script>
+</body>
+</html>
