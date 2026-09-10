@@ -1,0 +1,31 @@
+<!doctype html><meta charset="utf-8"><link rel="stylesheet" href="common.css">
+<title>AdWare countdown</title>
+<!-- OBS browser source overlay. Loaded as a local file, 960x230, transparent, placed
+     top-centre at 1:1 on the 3360x2100 canvas. Counts down to 17:00 EDT on Thu 10 Sep
+     2026, the published end of the 24-hour run. The target is fixed in UTC so the
+     machine timezone is irrelevant. -->
+<style>
+html,body{background:transparent;width:960px;height:230px;overflow:hidden}
+.wrap{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+.label{font:normal 44px/1 var(--slab);letter-spacing:.05em;color:var(--red);text-transform:uppercase;text-shadow:3px 3px 0 #000}
+.time{font:normal 148px/1 var(--slab);letter-spacing:.03em;color:var(--red);text-shadow:6px 6px 0 #000}
+</style>
+<div class="wrap">
+  <div class="label" id="label">ADWARE ENDS IN</div>
+  <div class="time" id="time">--:--:--</div>
+</div>
+<script>
+// 17:00 EDT is UTC-4, so 21:00 UTC on 10 Sep 2026. Month is zero-based.
+var target = Date.UTC(2026, 8, 10, 21, 0, 0);
+function pad(n){ return (n < 10 ? '0' : '') + n; }
+function tick(){
+  var ms = target - Date.now();
+  var el = document.getElementById('time'), lb = document.getElementById('label');
+  if (ms <= 0){ el.textContent = '00:00:00'; lb.textContent = 'ADWARE HAS ENDED'; return; }
+  var s = Math.floor(ms / 1000);
+  el.textContent = pad(Math.floor(s / 3600)) + ':' + pad(Math.floor(s % 3600 / 60)) + ':' + pad(s % 60);
+  // Re-align to the next whole second so the display never skips or stutters.
+  setTimeout(tick, 1000 - (Date.now() % 1000) + 5);
+}
+tick();
+</script>
