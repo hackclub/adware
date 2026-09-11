@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AdWare: ship a project, get your sticker on my laptop</title>
-<meta name="description" content="Ship a coding project with an hour logged in Hackatime, design a sticker, and I print it and stick it on my laptop live on stream. You get a copy in the post too.">
+<title>AdWare has ended</title>
+<meta name="description" content="AdWare ran for 24 hours on 9 and 10 Sep 2026. Hack Clubbers shipped projects and designed stickers, and I printed, cut and stuck them on my laptop live on stream. It is over now.">
 
 <!-- Favicon. The SVG is the real asset; the PNGs exist because Safari ignores
      SVG favicons, so without them Safari and iOS show a blank page icon. Both
@@ -33,6 +33,9 @@ const CONFIG = {
   // once FILLOUT_URL is filled, so the form can be built and pasted in early
   // and the page still cannot take submissions before you flip this.
   SUBMISSIONS_OPEN: true,
+  // The program is over. This wins over SUBMISSIONS_OPEN and turns the button
+  // into a dead "Submissions closed", so the form URL can stay for the record.
+  PROGRAM_ENDED: true,
 
   ENDS           : "Thu 10 Sep, 17:00 EDT"
 };
@@ -233,11 +236,14 @@ h2.slab{font:normal 30px/1 var(--slab);letter-spacing:.02em;color:var(--red);
    intrinsic width, so without this the wordmark refuses to shrink and spills
    past the panel edge, and max-width:100% does not save it because that 100% is
    the whole flex line, not the space left over after the dot and the gap. */
-.live-head img{width:327px;max-width:100%;min-width:0;height:auto}
+/* Sized by height rather than width so either heading asset keeps its shape:
+   live-now.svg is 327 wide, not-live.svg is 147. */
+.live-head img{height:35px;width:auto;max-width:100%;min-width:0}
 /* The on-air dot. Explicit px, not stretch+aspect-ratio: flex:none resolves the
    basis from content, so the aspect-ratio had no height to work from and the dot
    collapsed to zero width. */
 .dot{flex:none;width:22px;height:22px;border-radius:50%;background:var(--red)}
+.dot.off{background:#8d8d8d}
 .tv{position:relative;padding-top:56.25%;background:#000;border:1px solid #000}
 .tv iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .tv .off{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
@@ -265,7 +271,7 @@ footer a{color:#c9a233}
   /* Smaller than the space it could fill. Shrink-to-fit alone left the heading
      running the full panel width with no margin, which read as broken. */
   .live-head{gap:7px}
-  .live-head img{width:230px}
+  .live-head img{height:25px}
   .dot{width:16px;height:16px}
   /* One column here, so there is no text column to borrow a height from and the
      frame would collapse to nothing. Give it an explicit height instead. */
@@ -318,18 +324,18 @@ footer a{color:#c9a233}
     <!-- ---------- hero box ---------- -->
     <div class="box hero">
       <div>
-        <h1>Ship a project. Get your sticker stuck on my laptop.</h1>
+        <h1>AdWare has ended.</h1>
         <!-- The organiser name is the handbook's above-the-fold requirement. It
              used to be a separate chip; it now rides inside this sentence, which
              is the only place it appears above the fold. Do not drop it. -->
-        <p class="kicker">LIVE on stream, on camera, while you watch. I post you a copy
-          to keep as well.</p>
-        <p class="deal">You need two things: a <b>coding</b> project you have shipped with
-          at least 1 hour logged on it in Hackatime, and a sticker design.</p>
+        <p class="kicker">The stream is over. Every approved sticker went on my laptop live,
+          on camera.</p>
+        <p class="deal">Thank you to everyone who shipped. If you submitted, your sticker is
+          on my laptop and a copy is going in the post to you.</p>
         <ul class="balls">
-          <li>I will be streaming until <b data-cfg="ENDS"></b></li>
-          <li>The more coding hours you log, the bigger the sticker you can get</li>
-          <li>I print it, cut it, and stick it on my laptop on camera</li>
+          <li>The stream ran until <b data-cfg="ENDS"></b></li>
+          <li>Submissions closed when the stream ended</li>
+          <li>Copies get posted in the week after the stream</li>
         </ul>
       </div>
       <figure class="me">
@@ -350,8 +356,8 @@ footer a{color:#c9a233}
          the panel. The heading is an outlined SVG, so no font is needed. -->
     <section class="live">
       <h2 class="live-head">
-        <span class="dot" aria-hidden="true"></span>
-        <img src="live-now.svg" width="327" height="35" alt="Live literally right now">
+        <span class="dot off" aria-hidden="true"></span>
+        <img src="not-live.svg" width="147" height="35" alt="Not live...">
       </h2>
       <div class="tv" id="tv"></div>
     </section>
@@ -361,9 +367,9 @@ footer a{color:#c9a233}
     <section class="rate">
       <h2 class="slab">Prizes</h2>
       <div class="box lede">
-        <p>Ship a project, and upload your sticker design and I will put it on my laptop
-          during the stream.</p>
-        <p>I will also send a copy of your sticker to you after the stream.</p>
+        <p>Everyone who shipped a project and uploaded a sticker design got it put on my
+          laptop during the stream.</p>
+        <p>A copy of your sticker is being posted to you.</p>
       </div>
       <div class="tiers">
         <figure class="tier">
@@ -386,23 +392,22 @@ footer a{color:#c9a233}
 
     <!-- ---------- the boring, legible paragraph ---------- -->
     <div class="box plain">
-      <h2 class="slab">How it works</h2>
+      <h2 class="slab">How it worked</h2>
       <ol class="steps">
         <li>Log hours in Hackatime</li>
         <li>Ship a project</li>
         <li>Submit and select your sticker size</li>
         <li>Watch it on live</li>
       </ol>
-      <p>Anyone 18 or younger who submits a coding project during the stream can participate.
-        A game, a tool, website, whatever you want to build.</p>
-      <p>Build and ship a project. Log at least 1 hour on your project in Hackatime, then
-        submit below before the deadline.</p>
-      <p>Every submission is approved before I print it, anything I deem hateful, sexual, or
-        generally vulgar will be rejected.</p>
-      <p>Submissions close when the stream ends</p>
-      <p class="disclaimer">I check every submission and every hour by hand, so there is a wait
-        between submitting and me printing your sticker. Stickers go on the laptop as I get to
-        them, and I will post your stickers to you after the stream.</p>
+      <p>Anyone 18 or younger who submitted a coding project during the stream could take
+        part. A game, a tool, website, whatever you wanted to build.</p>
+      <p>You built and shipped a project, logged at least 1 hour on it in Hackatime, and
+        submitted before the deadline.</p>
+      <p>Every submission was approved before I printed it. Anything hateful, sexual, or
+        generally vulgar was rejected.</p>
+      <p>Submissions closed when the stream ended.</p>
+      <p class="disclaimer">Copies are posted in the week after the stream. If you submitted
+        and have not heard from me by then, message me on Slack using the link in the footer.</p>
     </div>
 
     <!-- ---------- submit ---------- -->
@@ -506,7 +511,12 @@ footer a{color:#c9a233}
   //    needed before going live and the console list is the checklist.
   var btn = document.getElementById("submit");
   if (isTodo(CONFIG.FILLOUT_URL) && missing.indexOf("FILLOUT_URL") === -1) missing.push("FILLOUT_URL");
-  if (!CONFIG.SUBMISSIONS_OPEN) {
+  if (CONFIG.PROGRAM_ENDED) {
+    btn.href = "#";
+    btn.setAttribute("aria-disabled", "true");
+    btn.querySelector("b").textContent = "Submissions closed";
+    btn.className = "btn off";
+  } else if (!CONFIG.SUBMISSIONS_OPEN) {
     btn.href = "#";
     btn.setAttribute("aria-disabled", "true");
     btn.querySelector("b").textContent = "Submissions not open yet";
