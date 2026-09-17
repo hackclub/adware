@@ -93,6 +93,22 @@ a{color:var(--red)}
 .masthead{text-align:center;padding:20px 0 14px}
 .masthead img{width:200px;height:auto;margin:0 auto}
 
+/* Hack Club 2026 ribbon, coming out of the top left corner the way the Solder
+   site does it. Absolutely positioned with no top, so it takes its static
+   position, which is directly under the ended bar whatever height that bar
+   wraps to; left is measured from the viewport edge because body is static.
+   Its curled end touches the left edge. Not rotated: the artwork already has
+   its own lean, and the organiser asked for it flat. Sized like Solder's,
+   about 18% of the viewport, clamped so phones and wide screens both stay
+   sane. The asset is hackclub-2026.svg used as-is, like
+   logo.svg. Added 17 Sep 2026 at the organiser's request, and it is the only
+   Hack Club mark above the fold. */
+.hc-corner{position:absolute;left:0;z-index:3;margin-top:8px;display:block;
+  width:clamp(140px,18vw,260px);
+  filter:drop-shadow(0 4px 6px rgba(0,0,0,.55))}
+.hc-corner img{width:100%;height:auto;display:block}
+.hc-corner:focus-visible{outline:3px solid #ff0;outline-offset:4px}
+
 .panel{background:var(--gold);padding:20px 20px 26px;
   box-shadow:0 0 0 1px rgba(0,0,0,.4),0 20px 50px rgba(0,0,0,.6)}
 
@@ -293,6 +309,13 @@ footer a{color:#c9a233}
 
 /* 400, not 700: the button only stops fitting on the very narrowest phones, and
    shrinking it on every phone would be a change with no bug behind it. */
+/* On phones the corner ribbon (140px wide, 54px tall, 8px down) reaches 62px
+   below the bar and 140px across, which is where a centred 165px wordmark
+   starts. Push the wordmark below it rather than shrinking either. */
+@media (max-width:480px){
+  .masthead{padding-top:72px}
+}
+
 @media (max-width:400px){
   .btn b{font-size:24px}
   .btn span{padding:12px 20px}
@@ -308,6 +331,11 @@ footer a{color:#c9a233}
      button and the NOT LIVE heading are what say it is over. -->
 <div class="ended" role="status">AdWare has ended. Submissions closed
   <b data-cfg="ENDS"></b>.</div>
+
+<!-- Corner ribbon. Sits in flow order right after the bar on purpose: with no
+     top set it is positioned where it would have been, under the bar. -->
+<a class="hc-corner" href="https://hackclub.com" target="_blank" rel="noopener noreferrer"
+   title="Hack Club"><img src="hackclub-2026.svg" width="534" height="207" alt="Hack Club 2026"></a>
 
 <div class="wrap">
 
